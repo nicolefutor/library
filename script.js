@@ -72,7 +72,7 @@ function processForm() {
     let title = document.querySelector('#title').value
     let author = document.querySelector('#author').value
     let pages = document.querySelector('#pages').value
-    let ifRead = document.querySelector('#read').value
+    let ifRead = document.querySelector('#read').checked
     document.querySelector('#form').reset()
     addBookToLibrary(title, author, pages, ifRead)
     render(myLibrary)
