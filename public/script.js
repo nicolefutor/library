@@ -85,6 +85,7 @@ const signOutBtn = document.querySelector('#signOutBtn')
 
 const heading = document.querySelector('#heading')
 const syncBtn = document.querySelector('#syncBtn')
+const message = document.querySelector('#message')
 
 const whenSignedOut = document.querySelector('#whenSignedOut')
 const whenSignedIn = document.querySelector('#whenSignedIn')
@@ -120,6 +121,14 @@ auth.onAuthStateChanged(user => {
                 uid: user.uid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 books: myLibrary.map((book) => ({title: book.title, author: book.author, pages: book.pages, ifRead: book.ifRead}))
+            }).then(() => {
+                message.style.color = 'green';
+                message.textContent = 'Synced';
+                setTimeout(() => {message.textContent = ''}, 2000)
+            }).catch(() => {
+                message.style.color = 'red';
+                message.textContent = 'There was an error'
+                setTimeout(() => {message.textContent = ''}, 2000)
             })
 
         })
