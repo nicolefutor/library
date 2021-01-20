@@ -77,3 +77,68 @@ function processForm() {
     addBookToLibrary(title, author, pages, ifRead)
     render(myLibrary)
 }
+
+const auth = firebase.auth()
+
+const signInBtn = document.querySelector('#signInBtn')
+const signOutBtn = document.querySelector('#signOutBtn')
+
+const heading = document.querySelector('#heading')
+const syncBtn = document.querySelector('#syncBtn')
+
+const whenSignedOut = document.querySelector('#whenSignedOut')
+const whenSignedIn = document.querySelector('#whenSignedIn')
+
+const provider = new firebase.auth.GoogleAuthProvider();
+
+signInBtn.addEventListener('click', () => auth.signInWithPopup(provider));
+signOutBtn.addEventListener('click', () => auth.signOut());
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        whenSignedOut.hidden = true
+        whenSignedIn.hidden = false
+        heading.textContent = `${user.displayName}'s Library`
+    }
+    else {
+        whenSignedOut.hidden = false
+        whenSignedIn.hidden = true
+        heading.textContent = `My Library`
+    }
+});
+
+
+const db = firebase.firestore();
+let dbRef;
+let unsubscribe;
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        dbRef = db.collection('libraries');
+        syncBtn.addEventListener('click', () => {
+            dbRef.doc(user.uid).set({
+                uid: user.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                books: myLibrary.map((book) => ({title: book.title, author: book.author, pages: book.pages, ifRead: book.ifRead}))
+            })
+
+        })
+        unsubscribe = dbRef
+            .where('uid', '==', user.uid)
+            .onSnapshot(querySnapshot => {
+                const library = querySnapshot.docs.forEach(doc => {
+                    const books = doc.data().books;
+                    books.map((book, index) => {
+                        const newBook = new Book(book.title, book.author, book.pages, book.ifRead);
+                        books[index] = newBook;
+                    })
+                    myLibrary = books;
+                    render(myLibrary);
+                })
+            })
+    }
+    else {
+        unsubscribe && unsubscribe();
+    }
+})
+
